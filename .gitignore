@@ -1,0 +1,26 @@
+# Claude
+CLAUDE.md
+**/CLAUDE.md
+.claude/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.venv/
+backend/.venv/
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+**/node_modules/
+dist/
+.DS_Store
+
+# Env
+.env
+.env.*
+*.key
+*.pem
