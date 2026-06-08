@@ -33,6 +33,16 @@ def _stripe_error(code: str, message: str, err_type: str = "card_error") -> HTTP
     )
 
 
+def _get_pi_or_404(pi_id: str, db: Session) -> PaymentIntent:
+    pi = db.query(PaymentIntent).filter(PaymentIntent.id == pi_id).first()
+    if not pi:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "resource_missing", "message": "No such payment intent.", "type": "invalid_request_error"}},
+        )
+    return pi
+
+
 def _to_response(pi: PaymentIntent) -> PaymentIntentResponse:
     next_action = None
     if pi.status == "requires_action":
@@ -81,19 +91,12 @@ async def confirm_payment_intent(
     body: PaymentIntentConfirm,
     db: Session = Depends(get_db),
 ):
-    pi = db.query(PaymentIntent).filter(PaymentIntent.id == pi_id).first()
-    if not pi:
-        raise HTTPException(status_code=404, detail={"error": {"code": "resource_missing", "message": "No such payment intent.", "type": "invalid_request_error"}})
+    pi = _get_pi_or_404(pi_id, db)
 
     if pi.status != "requires_confirmation":
         raise _stripe_error("invalid_request_error", f"PaymentIntent cannot be confirmed in status '{pi.status}'.", "invalid_request_error")
 
     pi = await process_confirm(pi, body, db)
-
-    if pi.status == "payment_failed" and pi.error_code:
-        # 仍返回对象（和 Stripe 行为一致），客户端检查 status 字段
-        pass
-
     return _to_response(pi)
 
 
@@ -117,17 +120,12 @@ def list_payment_intents(
 
 @router.get("/{pi_id}", response_model=PaymentIntentResponse)
 def get_payment_intent(pi_id: str, db: Session = Depends(get_db)):
-    pi = db.query(PaymentIntent).filter(PaymentIntent.id == pi_id).first()
-    if not pi:
-        raise HTTPException(status_code=404, detail={"error": {"code": "resource_missing", "message": "No such payment intent.", "type": "invalid_request_error"}})
-    return _to_response(pi)
+    return _to_response(_get_pi_or_404(pi_id, db))
 
 
 @router.post("/{pi_id}/cancel", response_model=PaymentIntentResponse)
 def cancel_payment_intent(pi_id: str, db: Session = Depends(get_db)):
-    pi = db.query(PaymentIntent).filter(PaymentIntent.id == pi_id).first()
-    if not pi:
-        raise HTTPException(status_code=404, detail={"error": {"code": "resource_missing", "message": "No such payment intent.", "type": "invalid_request_error"}})
+    pi = _get_pi_or_404(pi_id, db)
 
     if pi.status == "succeeded":
         raise _stripe_error("invalid_request_error", "PaymentIntent in status 'succeeded' cannot be canceled.", "invalid_request_error")
@@ -145,9 +143,7 @@ async def authenticate_payment_intent(
     body: PaymentIntentAuthenticate,
     db: Session = Depends(get_db),
 ):
-    pi = db.query(PaymentIntent).filter(PaymentIntent.id == pi_id).first()
-    if not pi:
-        raise HTTPException(status_code=404, detail={"error": {"code": "resource_missing", "message": "No such payment intent.", "type": "invalid_request_error"}})
+    pi = _get_pi_or_404(pi_id, db)
 
     if pi.status != "requires_action":
         raise _stripe_error("invalid_request_error", f"PaymentIntent is not awaiting authentication (status: {pi.status}).", "invalid_request_error")

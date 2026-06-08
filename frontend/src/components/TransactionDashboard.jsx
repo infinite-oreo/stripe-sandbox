@@ -30,6 +30,7 @@ export default function TransactionDashboard() {
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [refunding, setRefunding] = useState(null)
+  const [refundError, setRefundError] = useState(null)
 
   const refresh = useCallback(async () => {
     try {
@@ -50,11 +51,12 @@ export default function TransactionDashboard() {
 
   async function handleRefund(pi) {
     setRefunding(pi.id)
+    setRefundError(null)
     try {
       await api.createRefund(pi.id)
       await refresh()
     } catch (err) {
-      alert(err?.error?.message || 'Refund failed')
+      setRefundError(err?.detail?.error?.message || err?.message || 'Refund failed')
     } finally {
       setRefunding(null)
     }
@@ -73,6 +75,13 @@ export default function TransactionDashboard() {
           Auto-refresh 5s
         </div>
       </div>
+
+      {refundError && (
+        <div className="mb-3 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex justify-between items-center">
+          {refundError}
+          <button onClick={() => setRefundError(null)} className="ml-4 text-red-400 hover:text-red-600 font-medium">✕</button>
+        </div>
+      )}
 
       {transactions.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground border-2 border-dashed border-border rounded-xl">

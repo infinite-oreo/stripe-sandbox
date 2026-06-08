@@ -67,7 +67,7 @@ export default function CheckoutForm({ onResult }) {
   const inputCls = 'w-full px-4 py-2.5 bg-input border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground placeholder:text-muted-foreground'
 
   return (
-    <form onSubmit={handleSubmit} className="bg-card rounded-2xl shadow p-8 max-w-md w-full border border-border">
+    <form onSubmit={handleSubmit} autoComplete="off" className="bg-card rounded-2xl shadow p-8 max-w-md w-full border border-border">
       <h2 className="text-2xl font-bold text-foreground mb-2">Stripe Mock Checkout</h2>
       <p className="text-sm text-muted-foreground mb-6">Test payments locally — no real charges</p>
 
@@ -96,6 +96,7 @@ export default function CheckoutForm({ onResult }) {
           <input
             type="number" min="1" value={amount}
             onChange={e => setAmount(e.target.value)}
+            autoComplete="off"
             className={`${inputCls} pl-8`}
             placeholder="1000"
           />
@@ -108,6 +109,7 @@ export default function CheckoutForm({ onResult }) {
         <input
           type="text" value={cardNumber} placeholder="4242 4242 4242 4242"
           onChange={e => setCardNumber(formatCardNumber(e.target.value))}
+          autoComplete="off"
           className={`${inputCls} font-mono tracking-widest`}
         />
       </div>
@@ -118,6 +120,7 @@ export default function CheckoutForm({ onResult }) {
           <input
             type="text" value={expiry} placeholder="12/30"
             onChange={handleExpiryChange}
+            autoComplete="off"
             className={inputCls}
           />
         </div>
@@ -126,6 +129,7 @@ export default function CheckoutForm({ onResult }) {
           <input
             type="text" value={cvc} placeholder="123" maxLength={3}
             onChange={e => setCvc(e.target.value.replace(/\D/g, '').slice(0, 3))}
+            autoComplete="off"
             className={inputCls}
           />
         </div>

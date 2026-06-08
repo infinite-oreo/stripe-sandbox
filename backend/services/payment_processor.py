@@ -35,6 +35,14 @@ def _pi_to_dict(pi: PaymentIntent) -> dict:
     }
 
 
+def _commit(db: Session, pi: PaymentIntent, webhook_event: str | None) -> PaymentIntent:
+    db.commit()
+    db.refresh(pi)
+    if webhook_event:
+        asyncio.create_task(send_webhook_event(db, _pi_to_dict(pi), webhook_event))
+    return pi
+
+
 async def process_confirm(
     pi: PaymentIntent,
     body: PaymentIntentConfirm,
@@ -42,46 +50,30 @@ async def process_confirm(
 ) -> PaymentIntent:
     card = body.payment_method_data.card
     result = validate_card(card)
-    now = datetime.now(UTC)
+    webhook_event = None
 
     pi.card_last4 = card.number.replace(" ", "")[-4:]
-    pi.updated_at = now
+    pi.updated_at = datetime.now(UTC)
 
-    if not result.valid and result.result == "validation_error":
-        pi.status = "payment_failed"
-        pi.error_code = result.error_code
-        pi.error_message = result.error_message
-        db.commit()
-        db.refresh(pi)
-        return pi
+    match result.result:
+        case "requires_3ds":
+            pi.status = "requires_action"
+        case "declined":
+            pi.status = "payment_failed"
+            pi.error_code, pi.error_message = result.error_code, result.error_message
+            webhook_event = "payment_intent.payment_failed"
+        case "validation_error":
+            pi.status = "payment_failed"
+            pi.error_code, pi.error_message = result.error_code, result.error_message
+        case _:  # success
+            if result.delay > 0:
+                await asyncio.sleep(result.delay)
+            pi.status = "succeeded"
+            pi.error_code = None
+            pi.error_message = None
+            webhook_event = "payment_intent.succeeded"
 
-    if result.result == "requires_3ds":
-        pi.status = "requires_action"
-        db.commit()
-        db.refresh(pi)
-        return pi
-
-    if result.result == "declined":
-        pi.status = "payment_failed"
-        pi.error_code = result.error_code
-        pi.error_message = result.error_message
-        db.commit()
-        db.refresh(pi)
-        # 异步触发失败 webhook，不阻塞响应
-        asyncio.create_task(send_webhook_event(db, _pi_to_dict(pi), "payment_intent.payment_failed"))
-        return pi
-
-    # 成功路径（含可选延迟）
-    if result.delay > 0:
-        await asyncio.sleep(result.delay)
-
-    pi.status = "succeeded"
-    pi.error_code = None
-    pi.error_message = None
-    db.commit()
-    db.refresh(pi)
-    asyncio.create_task(send_webhook_event(db, _pi_to_dict(pi), "payment_intent.succeeded"))
-    return pi
+    return _commit(db, pi, webhook_event)
 
 
 async def process_authenticate(
@@ -89,20 +81,15 @@ async def process_authenticate(
     body: PaymentIntentAuthenticate,
     db: Session,
 ) -> PaymentIntent:
-    now = datetime.now(UTC)
-    pi.updated_at = now
+    pi.updated_at = datetime.now(UTC)
 
     if body.action == "success":
         pi.status = "succeeded"
-        db.commit()
-        db.refresh(pi)
-        asyncio.create_task(send_webhook_event(db, _pi_to_dict(pi), "payment_intent.succeeded"))
+        webhook_event = "payment_intent.succeeded"
     else:
         pi.status = "payment_failed"
         pi.error_code = "authentication_required"
         pi.error_message = "3D Secure authentication failed."
-        db.commit()
-        db.refresh(pi)
-        asyncio.create_task(send_webhook_event(db, _pi_to_dict(pi), "payment_intent.payment_failed"))
+        webhook_event = "payment_intent.payment_failed"
 
-    return pi
+    return _commit(db, pi, webhook_event)
