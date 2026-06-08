@@ -9,12 +9,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { api } from '../api'
 
 const STATUS_BADGE = {
-  succeeded:             'bg-green-100 text-green-800',
-  refunded:              'bg-purple-100 text-purple-800',
-  payment_failed:        'bg-red-100 text-red-800',
-  requires_action:       'bg-yellow-100 text-yellow-800',
-  requires_confirmation: 'bg-blue-100 text-blue-800',
-  canceled:              'bg-gray-100 text-gray-600',
+  succeeded:             'bg-secondary/40 text-secondary-foreground',
+  refunded:              'bg-muted text-muted-foreground',
+  payment_failed:        'bg-destructive/25 text-foreground',
+  requires_action:       'bg-accent text-accent-foreground',
+  requires_confirmation: 'bg-muted/60 text-muted-foreground',
+  canceled:              'bg-muted/40 text-muted-foreground',
 }
 
 function fmt(amount, currency) {
@@ -77,9 +77,9 @@ export default function TransactionDashboard() {
       </div>
 
       {refundError && (
-        <div className="mb-3 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex justify-between items-center">
+        <div className="mb-3 px-4 py-2 bg-destructive/15 border border-destructive/40 text-foreground text-sm rounded-lg flex justify-between items-center">
           {refundError}
-          <button onClick={() => setRefundError(null)} className="ml-4 text-red-400 hover:text-red-600 font-medium">✕</button>
+          <button onClick={() => setRefundError(null)} className="ml-4 text-muted-foreground hover:text-foreground font-medium">✕</button>
         </div>
       )}
 
@@ -117,7 +117,7 @@ export default function TransactionDashboard() {
                       <button
                         onClick={() => handleRefund(tx)}
                         disabled={refunding === tx.id}
-                        className="text-xs px-3 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full font-medium transition disabled:opacity-50"
+                        className="text-xs px-3 py-1 bg-primary/15 hover:bg-primary/25 text-primary rounded-full font-medium transition disabled:opacity-50"
                       >
                         {refunding === tx.id ? 'Refunding...' : 'Refund'}
                       </button>

@@ -5,13 +5,26 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import CheckoutForm from './components/CheckoutForm'
 import PaymentResult from './components/PaymentResult'
 import TransactionDashboard from './components/TransactionDashboard'
 
+function useDarkMode() {
+  const [dark, setDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
+  )
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark)
+  }, [dark])
+
+  return [dark, setDark]
+}
+
 export default function App() {
   const [result, setResult] = useState(null)
+  const [dark, setDark] = useDarkMode()
 
   return (
     <div className="min-h-screen bg-background">
@@ -20,6 +33,13 @@ export default function App() {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-sm">S</div>
           <span className="font-bold text-foreground">Stripe Mock</span>
           <span className="text-xs px-2 py-0.5 bg-accent text-primary rounded-full font-medium">Local Dev</span>
+          <button
+            onClick={() => setDark(d => !d)}
+            className="ml-auto w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground transition text-base"
+            aria-label="Toggle dark mode"
+          >
+            {dark ? '☀' : '☾'}
+          </button>
         </div>
       </header>
 

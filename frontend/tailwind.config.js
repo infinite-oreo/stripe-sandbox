@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
@@ -61,8 +62,9 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['Outfit', 'sans-serif'],
-        mono: ['monospace'],
+        sans: ['Poppins', 'sans-serif'],
+        serif: ['Lora', 'serif'],
+        mono: ['Fira Code', 'monospace'],
       },
     },
   },
