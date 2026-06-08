@@ -5,7 +5,7 @@
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
 """
 
-from datetime import datetime, UTC
+from datetime import datetime
 from typing import Any
 from pydantic import BaseModel, field_validator
 

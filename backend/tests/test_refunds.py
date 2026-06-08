@@ -5,7 +5,8 @@
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
 """
 
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest

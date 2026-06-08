@@ -15,7 +15,6 @@ import httpx
 from sqlalchemy.orm import Session
 
 from models import WebhookEndpoint, WebhookDelivery
-from schemas import PaymentIntentResponse, WebhookEvent
 from utils import generate_id
 
 logger = logging.getLogger(__name__)

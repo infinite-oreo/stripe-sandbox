@@ -15,7 +15,6 @@ from models import PaymentIntent
 from schemas import PaymentIntentConfirm, PaymentIntentAuthenticate
 from services.card_validator import validate_card
 from services.webhook_sender import send_webhook_event
-from utils import generate_id
 
 logger = logging.getLogger(__name__)
 

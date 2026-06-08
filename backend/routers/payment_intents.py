@@ -19,8 +19,6 @@ from schemas import (
     PaymentIntentResponse,
     PaymentIntentListResponse,
     NextAction,
-    ErrorResponse,
-    StripeError,
 )
 from services.payment_processor import process_confirm, process_authenticate
 from utils import generate_id
